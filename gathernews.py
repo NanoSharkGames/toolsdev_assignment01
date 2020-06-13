@@ -9,6 +9,8 @@ newsWebsiteOne = 'https://www.nintendolife.com/'
 newsWebsiteTwo = 'https://www.ign.com/'
 newsWebsiteThree = 'https://www.eurogamer.net/'
 
+maxArticles = 5
+
 retrievedArticles = list()
 retrievedArticlesWithKeyword = list()
 
@@ -17,16 +19,13 @@ retrievedArticlesWithKeyword = list()
 def GetUserKeyword(prompt):
     return input(prompt)
 
-def ScrapeArticle(source):
+def ScrapeArticles(source):
+
+    articles = 0
+
     src = newspaper.build(source, memoize_articles=False)
 
     for article in src.articles:
-        retrievedArticles.append(article)
-
-def FindArticlesWithKeyword(keyword):
-
-    for article in retrievedArticles:
-
         try:
             article.download()
             article.parse()
@@ -34,13 +33,22 @@ def FindArticlesWithKeyword(keyword):
         except:
             continue
 
-        if keyword in article.keywords:
-            retrievedArticlesWithKeyword.append(article)
+        if ArticleHasKeyword(article):
+            WriteArticleToDocument(article)
+            articles += 1
 
-def WriteArticles():
+        if articles == maxArticles:
+            break
 
-    for article in retrievedArticlesWithKeyword:
-        WriteArticleToDocument(article)
+def ArticleHasKeyword(article):
+
+    if keyword in article.keywords or keyword in article.title:
+        return True
+    else:
+        if (keyword == ""):
+            return True
+        else:
+            return False
 
 def WriteArticleToDocument(article):
 
@@ -57,26 +65,20 @@ def WriteArticleToDocument(article):
 
     summary = article.summary
 
-    print(title + "-" + authorTxt)
-    print(summary)
-    print('\n')
-
     summaryDoc.write(title + "-" + authorTxt)
+    summaryDoc.write('\n')
     summaryDoc.write(summary)
     summaryDoc.write('\n')
+    summaryDoc.write('\n')
 
-keyword = GetUserKeyword("Enter a keyword to guide your search! ")
+keyword = GetUserKeyword("We focus on gaming news! Enter a keyword to guide your search! ")
 
 print("The search begins! Please wait...")
 
-ScrapeArticle(newsWebsiteOne)
-ScrapeArticle(newsWebsiteTwo)
-ScrapeArticle(newsWebsiteThree)
-
-FindArticlesWithKeyword(keyword)
-
 summaryDoc = open(summaryDocName, 'w')
 
-WriteArticles()
+ScrapeArticles(newsWebsiteOne)
+ScrapeArticles(newsWebsiteTwo)
+ScrapeArticles(newsWebsiteThree)
 
 summaryDoc.close()
