@@ -52,7 +52,7 @@ def ScrapeArticles(source):
             break
 
 def ArticleHasKeyword(article, keyword):
-    if keyword in article.keywords or keyword in article.title or keyword in article.summaryM:
+    if keyword in article.keywords or keyword in article.title or keyword in article.summary:
         return True
     else:
         if (keyword == ""):
