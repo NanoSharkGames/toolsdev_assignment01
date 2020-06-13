@@ -9,10 +9,12 @@ newsWebsiteOne = 'https://www.nintendolife.com/'
 newsWebsiteTwo = 'https://www.ign.com/'
 newsWebsiteThree = 'https://www.eurogamer.net/'
 
-maxArticles = 5
+# 0nly pass a max of 5 articles per web source
+maxArticlesPerWebsite = 5
 
-retrievedArticles = list()
-retrievedArticlesWithKeyword = list()
+doneWithEnteringKeywords = False
+
+keywordList = list()
 
 # List of functions
 
@@ -26,6 +28,8 @@ def ScrapeArticles(source):
     src = newspaper.build(source, memoize_articles=False)
 
     for article in src.articles:
+
+        # Attempt to download an article
         try:
             article.download()
             article.parse()
@@ -33,16 +37,22 @@ def ScrapeArticles(source):
         except:
             continue
 
-        if ArticleHasKeyword(article):
+        foundKeyword = False
+
+        # Only write article to file if it has any of the keywords.
+        for keyword in keywordList:
+            if ArticleHasKeyword(article, keyword):
+                foundKeyword = True
+
+        if foundKeyword:
             WriteArticleToDocument(article)
             articles += 1
 
-        if articles == maxArticles:
+        if articles == maxArticlesPerWebsite:
             break
 
-def ArticleHasKeyword(article):
-
-    if keyword in article.keywords or keyword in article.title:
+def ArticleHasKeyword(article, keyword):
+    if keyword in article.keywords or keyword in article.title or keyword in article.summaryM:
         return True
     else:
         if (keyword == ""):
@@ -71,7 +81,24 @@ def WriteArticleToDocument(article):
     summaryDoc.write('\n')
     summaryDoc.write('\n')
 
-keyword = GetUserKeyword("We focus on gaming news! Enter a keyword to guide your search! ")
+# Core functionality
+
+prompt = "We focus on gaming news! Enter a keyword to guide your search OR type nothing if ready to search: "
+
+while not doneWithEnteringKeywords:
+
+    keyword = GetUserKeyword(prompt)
+
+    if (keyword != ""):
+        prompt = "Enter another keyword OR type nothing if ready to search: "
+        keywordList.append(keyword)
+    else:
+
+        # Only add blank keyword to keyword list if the list is empty
+        if len(keywordList) <= 0:
+            keywordList.append(keyword)
+
+        doneWithEnteringKeywords = True
 
 print("The search begins! Please wait...")
 
